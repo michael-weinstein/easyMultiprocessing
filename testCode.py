@@ -11,7 +11,7 @@ class RandomDNASequenceMaker(object):
             sequence.append(random.choice(self.bases))
         return "".join(sequence)
 
-if __name__ == "__main__":
+if __name__ == "__main__":  #absolutely necessary for Windows machines
     import datetime
     from easyMultiprocessing import easyMultiprocessing
     seqGen = RandomDNASequenceMaker(100)
