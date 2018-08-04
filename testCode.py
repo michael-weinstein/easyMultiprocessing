@@ -15,7 +15,7 @@ if __name__ == "__main__":  #absolutely necessary for Windows machines
     import datetime
     from easyMultiprocessing import easyMultiprocessing
     seqGen = RandomDNASequenceMaker(100)
-    numberOfSequences = list(range(1000000))
+    numberOfSequences = list(range(100000))
     start = datetime.datetime.now()
     sequenceCollector = []
     for i in numberOfSequences:
