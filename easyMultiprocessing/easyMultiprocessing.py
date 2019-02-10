@@ -1,5 +1,7 @@
 import multiprocessing
 import multiprocessing.pool
+import logging
+logger = logging.getLogger(__name__)
 
 def calculateAvailableCores():
     import multiprocessing
@@ -23,33 +25,43 @@ class Deadpool(multiprocessing.pool.Pool): #Deadpool has no class
 
 
 def parallelProcessRunner(processor, itemsToProcess, coreLimit:int = 0, filterFunction = False, totalSizeEstimate = None, coresPerProcess = 1, nonDaemonic = False):
+    logger.debug("Running import statements")
     import multiprocessing
     import inspect
     import collections
+    logger.debug("Making assertions")
     assert callable(processor), "Processor must be a callable function/method"
     assert len(inspect.signature(processor).parameters) == 1, "Processor function must take one argument"
     assert isinstance(itemsToProcess, collections.Iterable), "Items to process must be an iterable of some kind"
     assert coresPerProcess > 0, "Cores per process must be a positive integer"
+    logger.debug("Calculating cores available")
     coreLimit = max([0, coreLimit])
     if not coreLimit:
         coreLimit = calculateAvailableCores()
     coreLimit = coreLimit // coresPerProcess
+    logger.info("Using %s cores" %coreLimit)
     if nonDaemonic:
+        logger.debug("Setting pool using nonDaemonic processes. This can cause issues if not done with care.")
         workers = Deadpool(coreLimit)
     else:
+        logger.debut("Setting up the process pool.")
         workers = multiprocessing.Pool(coreLimit)
     try:
         length = len(itemsToProcess)
         chunkSize = calculateChunkSize(length, coreLimit)
+        logger.info("Starting multiprocessing of %s objects in chunks of %s" %(length, chunkSize))
         mapper = workers.map
     except TypeError:
         if not totalSizeEstimate:
             totalSizeEstimate = 50000
-            print("Using default total size estimate of 50,000 because none was given.")
+            logger.info("Using default total size estimate of 50,000 because none was given.")
         chunkSize = calculateChunkSize(totalSizeEstimate, coreLimit)
+        logger.info("Starting multiprocessing in chunks of %s" %chunkSize)
         mapper = workers.imap
     if not filterFunction:
+        logger.debug("Returning results")
         return mapper(processor, itemsToProcess, chunkSize)
     else:
+        logger.debug("Returning filtered results")
         results = mapper(processor, itemsToProcess, chunkSize)
         return [result for result in results if result]
