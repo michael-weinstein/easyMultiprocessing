@@ -11,17 +11,22 @@ def calculateAvailableCores():
 def calculateChunkSize(length, workers:int):
     return -1 * ((-1*length) // workers)
 
-
-class NonDaemonicProcess(multiprocessing.Process):
-    def _getDaemon(self):
+class NoDaemonProcess(multiprocessing.Process):
+    @property
+    def daemon(self):
         return False
-    def _setDaemon(self, value):
-        pass
-    daemon = property(_getDaemon, _setDaemon)
 
+    @daemon.setter
+    def daemon(self, value):
+        pass
+
+class NoDaemonContext(type(multiprocessing.get_context())):
+    Process = NoDaemonProcess
 
 class Deadpool(multiprocessing.pool.Pool): #Deadpool has no class
-    Process = NonDaemonicProcess
+    def __init__(self, *args, **kwargs):
+        kwargs['context'] = NoDaemonContext()
+        super(Deadpool, self).__init__(*args, **kwargs)
 
 
 def parallelProcessRunner(processor, itemsToProcess, coreLimit:int = 0, filterFunction = False, totalSizeEstimate = None, coresPerProcess = 1, nonDaemonic = False):
@@ -44,7 +49,7 @@ def parallelProcessRunner(processor, itemsToProcess, coreLimit:int = 0, filterFu
         logger.debug("Setting pool using nonDaemonic processes. This can cause issues if not done with care.")
         workers = Deadpool(coreLimit)
     else:
-        logger.debut("Setting up the process pool.")
+        logger.debug("Setting up the process pool.")
         workers = multiprocessing.Pool(coreLimit)
     try:
         length = len(itemsToProcess)
