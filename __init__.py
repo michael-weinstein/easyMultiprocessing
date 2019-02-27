@@ -7,7 +7,6 @@ def calculateAvailableCores():
     import multiprocessing
     return max([multiprocessing.cpu_count() - 1, 1])
 
-
 def calculateChunkSize(length, workers:int):
     return -1 * ((-1*length) // workers)
 
@@ -71,3 +70,31 @@ def parallelProcessRunner(processor, itemsToProcess, coreLimit:int = 0, filterFu
         logger.debug("Returning filtered results")
         results = mapper(processor, itemsToProcess, chunkSize)
         return [result for result in results if result]
+
+if __name__ == "__main__":  #absolutely necessary for Windows machines
+    import datetime
+    class RandomDNASequenceMaker(object):
+
+        def __init__(self, length):
+            self.length = length
+            self.bases = list("ATGC")
+
+        def makeSequence(self, throwAway=0):
+            import random
+            sequence = []
+            for i in range(self.length):
+                sequence.append(random.choice(self.bases))
+            return "".join(sequence)
+
+    seqGen = RandomDNASequenceMaker(100)
+    numberOfSequences = list(range(100000))
+    start = datetime.datetime.now()
+    sequenceCollector = []
+    for i in numberOfSequences:
+        sequenceCollector.append(seqGen.makeSequence(i))
+    end = datetime.datetime.now()
+    print("Serial process completed in %s" %(end - start))
+    start = datetime.datetime.now()
+    multiResult = parallelProcessRunner(seqGen.makeSequence, numberOfSequences)
+    end = datetime.datetime.now()
+    print("Parallel process completed in %s" %(end - start))
