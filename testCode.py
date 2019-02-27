@@ -13,7 +13,7 @@ class RandomDNASequenceMaker(object):
 
 if __name__ == "__main__":  #absolutely necessary for Windows machines
     import datetime
-    from easyMultiprocessing import easyMultiprocessing
+    import easyMultiprocessing
     seqGen = RandomDNASequenceMaker(100)
     numberOfSequences = list(range(100000))
     start = datetime.datetime.now()
